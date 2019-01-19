@@ -1,0 +1,16 @@
+{
+  "name": "react-lazy-hydrate",
+  "version": "0.0.1",
+  "description": "Lazy Hydration for React",
+  "main": "dist/index.js",
+  "author": "Hadeeb Farhan <hadeebfarhan1@gmail.com>",
+  "license": "MIT",
+  "files": [
+    "src",
+    "dist"
+  ],
+  "devDependencies": {
+    "react": "^16.7.0",
+    "react-dom": "^16.7.0"
+  }
+}
