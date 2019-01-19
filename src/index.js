@@ -5,8 +5,7 @@ class LazyHydrate extends Component {
     super();
     this.state = {
       // Always render on server
-      // TODO: Rename this
-      hydrate: typeof window === "undefined"
+      hydrated: typeof window === "undefined"
     };
     this.childRef = createRef();
 
@@ -29,7 +28,7 @@ class LazyHydrate extends Component {
   }
 
   hydrate() {
-    this.setState({ hydrate: true });
+    this.setState({ hydrated: true });
     while (this.cleanupFns.length > 0) this.cleanupFns.pop()();
   }
 
@@ -68,7 +67,7 @@ class LazyHydrate extends Component {
   }
 
   render() {
-    if (this.state.hydrate) {
+    if (this.state.hydrated) {
       return (
         <div ref={this.childRef} style={{ display: "contents" }}>
           {this.props.children}
