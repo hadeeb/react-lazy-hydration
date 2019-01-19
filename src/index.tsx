@@ -1,14 +1,28 @@
 import React, { Component, createRef } from "react";
 
-class LazyHydrate extends Component {
-  constructor() {
-    super();
+type LazyProps = {
+  ssrOnly: boolean;
+  whenIdle: boolean;
+  whenVisible: boolean;
+};
+
+type LazyState = {
+  hydrated: boolean;
+};
+
+class LazyHydrate extends Component<LazyProps, LazyState> {
+  childRef: React.RefObject<HTMLDivElement>;
+  cleanupFns: Array<Function>;
+  io: IntersectionObserver;
+
+  constructor(props: LazyProps) {
+    super(props);
     this.state = {
       // Always render on server
       hydrated: typeof window === "undefined"
     };
-    this.childRef = createRef();
 
+    this.childRef = createRef();
     this.cleanupFns = [];
     this.hydrate = this.hydrate.bind(this);
 
@@ -17,7 +31,7 @@ class LazyHydrate extends Component {
         ? new IntersectionObserver(entries => {
             entries.forEach(entry => {
               if (
-                entry.target === this.childRef.current &&
+                entry.target.parentElement === this.childRef.current &&
                 (entry.isIntersecting || entry.intersectionRatio > 0)
               ) {
                 this.hydrate();
@@ -43,23 +57,29 @@ class LazyHydrate extends Component {
 
     if (ssrOnly) return;
 
-    if (whenIdle)
-      if (requestIdleCallback) {
-        const id = requestIdleCallback(
+    if (whenIdle) {
+      // @ts-ignore
+      if (window.requestIdleCallback) {
+        // @ts-ignore
+        const id = window.requestIdleCallback(
           () => requestAnimationFrame(() => this.hydrate()),
           {
             timeout: 500
           }
         );
+        // @ts-ignore
         this.cleanupFns.push[() => cancelIdleCallback(id)];
       } else {
         this.hydrate();
       }
+    }
 
     if (whenVisible) {
       if (this.io) {
-        io.observe(this.childRef.current);
-        this.cleanupFns.push(() => this.io.unobserve(this.childRef.current));
+        this.io.observe(this.childRef.current);
+        this.cleanupFns.push(() =>
+          this.io.unobserve(this.childRef.current.children[0])
+        );
       } else {
         this.hydrate();
       }

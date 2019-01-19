@@ -3,14 +3,40 @@
   "version": "0.0.1",
   "description": "Lazy Hydration for React",
   "main": "dist/index.js",
+  "module": "es/index.js",
+  "typings": "es/index.d.ts",
   "author": "Hadeeb Farhan <hadeebfarhan1@gmail.com>",
   "license": "MIT",
   "files": [
     "src",
+    "es",
     "dist"
   ],
+  "scripts": {
+    "build": "yarn build:commonjs && yarn build:es",
+    "build:commonjs": "cross-env BABEL_ENV=commonjs babel src --out-dir dist --extensions '.ts','.tsx'",
+    "build:es": "cross-env BABEL_ENV=es babel src --out-dir es --extensions '.ts','.tsx'",
+    "types": "tsc",
+    "prepublishOnly": "yarn build"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.2.0"
+  },
+  "peerDependencies": {
+    "react": ">=16.3.0"
+  },
   "devDependencies": {
+    "@babel/cli": "^7.2.3",
+    "@babel/core": "^7.2.2",
+    "@babel/plugin-proposal-class-properties": "^7.2.3",
+    "@babel/plugin-transform-runtime": "^7.2.0",
+    "@babel/preset-env": "^7.2.3",
+    "@babel/preset-typescript": "^7.1.0",
+    "@types/react": "^16.7.20",
+    "cross-env": "^5.2.0",
     "react": "^16.7.0",
-    "react-dom": "^16.7.0"
+    "react-dom": "^16.7.0",
+    "tslib": "^1.9.3",
+    "typescript": "^3.2.4"
   }
 }
