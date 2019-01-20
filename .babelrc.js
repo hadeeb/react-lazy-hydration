@@ -7,6 +7,7 @@ module.exports = {
   ],
   plugins: [
     ["@babel/transform-runtime", { useESModules: !cjs }],
+    "@babel/transform-react-jsx",
     ["@babel/plugin-proposal-class-properties", { loose: true }],
     cjs && ["@babel/transform-modules-commonjs", { loose: true }]
   ].filter(Boolean)
