@@ -7,6 +7,7 @@
   "typings": "es/index.d.ts",
   "author": "Hadeeb Farhan <hadeebfarhan1@gmail.com>",
   "license": "MIT",
+  "sideEffects": false,
   "files": [
     "src",
     "es",
@@ -17,6 +18,8 @@
     "build:commonjs": "cross-env BABEL_ENV=commonjs babel src --out-dir dist --extensions '.ts','.tsx'",
     "build:es": "cross-env BABEL_ENV=es babel src --out-dir es --extensions '.ts','.tsx'",
     "types": "tsc",
+    "prebuild": "rimraf dist es",
+    "postbuild": "yarn types",
     "prepublishOnly": "yarn build"
   },
   "dependencies": {
@@ -37,6 +40,7 @@
     "cross-env": "^5.2.0",
     "react": "^16.7.0",
     "react-dom": "^16.7.0",
+    "rimraf": "^2.6.3",
     "tslib": "^1.9.3",
     "typescript": "^3.2.4"
   }
