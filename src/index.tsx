@@ -76,7 +76,8 @@ class LazyHydrate extends Component<LazyProps, LazyState> {
 
     if (whenVisible) {
       if (this.io) {
-        this.io.observe(this.childRef.current);
+        // As root node does not have any box model, it cannot intersect.
+        this.io.observe(this.childRef.current.children[0]);
         this.cleanupFns.push(() =>
           this.io.unobserve(this.childRef.current.children[0])
         );
