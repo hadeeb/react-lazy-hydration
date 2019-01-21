@@ -1,18 +1,22 @@
 import React, { ComponentType, useLayoutEffect, useRef, useState } from "react";
 import { LazyProps } from "./index";
 
-function useLazyHydrate(component: ComponentType, props: LazyProps) {
+export function useLazyHydration(component: ComponentType, props: LazyProps) {
   const [hydrated, setHydrated] = useState(typeof window === "undefined");
   const childRef = useRef(null);
 
   const cleanupFns = useRef([]);
 
-  const hydrate = useRef(function() {
-    setHydrated(true);
-    cleanup.current();
-  });
+  function cleanup() {
+    while (cleanupFns.current.length > 0) cleanupFns.current.pop()();
+  }
 
-  const io = useRef(
+  function hydrate() {
+    setHydrated(true);
+    cleanup();
+  }
+
+  const io =
     typeof IntersectionObserver !== "undefined"
       ? new IntersectionObserver(entries => {
           entries.forEach(entry => {
@@ -21,21 +25,16 @@ function useLazyHydrate(component: ComponentType, props: LazyProps) {
               (entry.isIntersecting || entry.intersectionRatio > 0)
             ) {
               console.log(entry.target);
-              hydrate.current();
+              hydrate();
             }
           });
         })
-      : null
-  );
-
-  const cleanup = useRef(function() {
-    while (cleanupFns.current.length > 0) cleanupFns.current.pop()();
-  });
+      : null;
 
   useLayoutEffect(() => {
     if (childRef.current.childElementCount === 0) {
       // No SSR rendered content.
-      hydrate.current();
+      hydrate();
       return;
     }
 
@@ -45,7 +44,7 @@ function useLazyHydrate(component: ComponentType, props: LazyProps) {
 
     if (!whenIdle && !whenVisible) {
       console.warn(`Set atleast one of the props to 'true'`);
-      hydrate.current();
+      hydrate();
       return;
     }
 
@@ -54,7 +53,7 @@ function useLazyHydrate(component: ComponentType, props: LazyProps) {
       if (window.requestIdleCallback) {
         // @ts-ignore
         const id = window.requestIdleCallback(
-          () => requestAnimationFrame(() => hydrate.current()),
+          () => requestAnimationFrame(() => hydrate()),
           {
             timeout: 500
           }
@@ -62,23 +61,23 @@ function useLazyHydrate(component: ComponentType, props: LazyProps) {
         // @ts-ignore
         cleanupFns.current.push(() => cancelIdleCallback(id));
       } else {
-        hydrate.current();
+        hydrate();
         return;
       }
     }
 
     if (whenVisible) {
       if (io) {
-        io.current.observe(childRef.current.children[0]);
+        io.observe(childRef.current.children[0]);
         cleanupFns.current.push(() =>
-          io.current.unobserve(childRef.current.children[0])
+          io.unobserve(childRef.current.children[0])
         );
       } else {
-        hydrate.current();
+        hydrate();
       }
     }
 
-    return cleanup.current;
+    return cleanup;
   }, []);
 
   if (hydrated) {
@@ -97,5 +96,3 @@ function useLazyHydrate(component: ComponentType, props: LazyProps) {
     );
   }
 }
-
-export default useLazyHydrate;
