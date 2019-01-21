@@ -1,17 +1,30 @@
 {
   "name": "react-lazy-hydration",
   "version": "0.0.1",
-  "description": "Lazy Hydration for React",
+  "description": "Lazy Hydration for Server Rendered React Components",
   "main": "dist/index.js",
   "module": "es/index.js",
   "typings": "es/index.d.ts",
-  "author": "Hadeeb Farhan <hadeebfarhan1@gmail.com>",
+  "author": {
+    "name": "Hadeeb Farhan",
+    "email": "hadeebfarhan1@gmail.com"
+  },
   "license": "MIT",
   "sideEffects": false,
   "files": [
     "src",
     "es",
     "dist"
+  ],
+  "bugs": {
+    "url": "https://github.com/hadeeb/react-lazy-hydration/issues"
+  },
+  "homepage": "https://github.com/hadeeb/react-lazy-hydration#readme",
+  "keywords": [
+    "react",
+    "ssr",
+    "lazy hydration",
+    "hydration"
   ],
   "scripts": {
     "build": "yarn build:commonjs && yarn build:es",
