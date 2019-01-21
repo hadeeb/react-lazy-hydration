@@ -1,5 +1,5 @@
 {
-  "name": "react-lazy-hydrate",
+  "name": "react-lazy-hydration",
   "version": "0.0.1",
   "description": "Lazy Hydration for React",
   "main": "dist/index.js",
