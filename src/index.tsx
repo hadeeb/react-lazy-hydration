@@ -57,6 +57,12 @@ class LazyHydrate extends Component<LazyProps, LazyState> {
 
     if (ssrOnly) return;
 
+    if (!whenIdle && !whenVisible) {
+      console.warn(`Set atleast one of the props to 'true'`);
+      this.hydrate();
+      return;
+    }
+
     if (whenIdle) {
       // @ts-ignore
       if (window.requestIdleCallback) {
