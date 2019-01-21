@@ -7,5 +7,5 @@
     "emitDeclarationOnly": true,
     "esModuleInterop": true
   },
-  "files": ["src/index.tsx"]
+  "files": ["src/index.tsx", "src/hook.tsx"]
 }

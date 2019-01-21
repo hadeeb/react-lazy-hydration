@@ -35,8 +35,8 @@
     "@babel/preset-typescript": "^7.1.0",
     "@types/react": "^16.7.20",
     "cross-env": "^5.2.0",
-    "react": "^16.7.0",
-    "react-dom": "^16.7.0",
+    "react": "^16.8.0-alpha.1",
+    "react-dom": "^16.8.0-alpha.1",
     "tslib": "^1.9.3",
     "typescript": "^3.2.4"
   }
