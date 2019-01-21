@@ -1,6 +1,6 @@
 import React, { Component, createRef } from "react";
 
-type LazyProps = {
+export type LazyProps = {
   ssrOnly: boolean;
   whenIdle: boolean;
   whenVisible: boolean;
