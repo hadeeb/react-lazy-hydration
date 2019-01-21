@@ -43,6 +43,12 @@ function useLazyHydrate(component: ComponentType, props: LazyProps) {
 
     if (ssrOnly) return;
 
+    if (!whenIdle && !whenVisible) {
+      console.warn(`Set atleast one of the props to 'true'`);
+      hydrate.current();
+      return;
+    }
+
     if (whenIdle) {
       // @ts-ignore
       if (window.requestIdleCallback) {
