@@ -2,6 +2,11 @@ import React, { ComponentType, useLayoutEffect, useRef, useState } from "react";
 import { LazyProps } from "./index";
 
 export function useLazyHydration(component: ComponentType, props: LazyProps) {
+  const { ssrOnly, whenIdle, whenVisible } = props;
+
+  if (!ssrOnly && !whenIdle && !whenVisible) {
+    console.warn(`LazyHydrate: Set atleast one of the props to 'true'`);
+  }
   const [hydrated, setHydrated] = useState(typeof window === "undefined");
   const childRef = useRef(null);
 
@@ -24,7 +29,6 @@ export function useLazyHydration(component: ComponentType, props: LazyProps) {
               entry.target.parentElement === childRef.current &&
               (entry.isIntersecting || entry.intersectionRatio > 0)
             ) {
-              console.log(entry.target);
               hydrate();
             }
           });
@@ -38,15 +42,7 @@ export function useLazyHydration(component: ComponentType, props: LazyProps) {
       return;
     }
 
-    const { ssrOnly, whenIdle, whenVisible } = props;
-
     if (ssrOnly) return;
-
-    if (!whenIdle && !whenVisible) {
-      console.warn(`Set atleast one of the props to 'true'`);
-      hydrate();
-      return;
-    }
 
     if (whenIdle) {
       // @ts-ignore

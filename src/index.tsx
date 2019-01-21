@@ -22,6 +22,12 @@ class LazyHydrate extends Component<LazyProps, LazyState> {
       hydrated: typeof window === "undefined"
     };
 
+    const { ssrOnly, whenIdle, whenVisible } = props;
+
+    if (!ssrOnly && !whenIdle && !whenVisible) {
+      console.warn(`LazyHydrate: Set atleast one of the props to 'true'`);
+    }
+
     this.childRef = createRef();
     this.cleanupFns = [];
     this.hydrate = this.hydrate.bind(this);
@@ -56,12 +62,6 @@ class LazyHydrate extends Component<LazyProps, LazyState> {
     const { ssrOnly, whenIdle, whenVisible } = this.props;
 
     if (ssrOnly) return;
-
-    if (!whenIdle && !whenVisible) {
-      console.warn(`Set atleast one of the props to 'true'`);
-      this.hydrate();
-      return;
-    }
 
     if (whenIdle) {
       // @ts-ignore
