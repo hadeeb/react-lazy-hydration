@@ -21,19 +21,7 @@ export function useLazyHydration(component: ComponentType, props: LazyProps) {
     cleanup();
   }
 
-  const io =
-    typeof IntersectionObserver !== "undefined"
-      ? new IntersectionObserver(entries => {
-          entries.forEach(entry => {
-            if (
-              entry.target.parentElement === childRef.current &&
-              (entry.isIntersecting || entry.intersectionRatio > 0)
-            ) {
-              hydrate();
-            }
-          });
-        })
-      : null;
+  const io = useRef(null);
 
   useLayoutEffect(() => {
     if (childRef.current.childElementCount === 0) {
@@ -63,10 +51,20 @@ export function useLazyHydration(component: ComponentType, props: LazyProps) {
     }
 
     if (whenVisible) {
-      if (io) {
-        io.observe(childRef.current.children[0]);
+      if (typeof IntersectionObserver !== "undefined") {
+        io.current = new IntersectionObserver(entries => {
+          entries.forEach(entry => {
+            if (
+              entry.target.parentElement === childRef.current &&
+              (entry.isIntersecting || entry.intersectionRatio > 0)
+            ) {
+              hydrate();
+            }
+          });
+        });
+        io.current.observe(childRef.current.children[0]);
         cleanupFns.current.push(() =>
-          io.unobserve(childRef.current.children[0])
+          io.current.unobserve(childRef.current.children[0])
         );
       } else {
         hydrate();
@@ -76,19 +74,16 @@ export function useLazyHydration(component: ComponentType, props: LazyProps) {
     return cleanup;
   }, []);
 
-  if (hydrated) {
-    return (
-      <div ref={childRef} style={{ display: "contents" }}>
-        {component}
-      </div>
-    );
-  } else {
-    return (
-      <div
-        ref={childRef}
-        style={{ display: "contents" }}
-        dangerouslySetInnerHTML={{ __html: "" }}
-      />
-    );
-  }
+  const lazyComponent = hydrated ? (
+    <div ref={childRef} style={{ display: "contents" }}>
+      {component}
+    </div>
+  ) : (
+    <div
+      ref={childRef}
+      style={{ display: "contents" }}
+      dangerouslySetInnerHTML={{ __html: "" }}
+    />
+  );
+  return [lazyComponent, hydrated];
 }

@@ -4,13 +4,13 @@ Lazy Hydration for Server Rendered React Components
 
 ## Installation
 
-```
+```bash
 npm i react-lazy-hydration
 ```
 
 OR
 
-```
+```bash
 yarn add react-lazy-hydration
 ```
 
@@ -23,7 +23,7 @@ import LazyHydrate from "react-lazy-hydration";
 function App() {
   return (
     <div>
-      {/* Skip Rendering  */}
+      {/* Skip Hydrating  */}
       <LazyHydrate ssrOnly>
         {...}
       </LazyHydrate>
@@ -51,7 +51,7 @@ import { useLazyHydration } from "react-lazy-hydration/hook";
 import Mycomponent from "...";
 
 function App() {
-  const LazyComponent = useLazyHydration(MyComponent, {
+  const [LazyComponent, hydarated] = useLazyHydration(MyComponent, {
     ssrOnly: true /*,
     whenVisible: false,
     whenIdle: false */
