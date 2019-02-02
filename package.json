@@ -16,6 +16,10 @@
     "es",
     "dist"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hadeeb/react-lazy-hydration.git"
+  },
   "bugs": {
     "url": "https://github.com/hadeeb/react-lazy-hydration/issues"
   },
