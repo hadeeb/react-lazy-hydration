@@ -113,3 +113,5 @@ class LazyHydrate extends Component<LazyProps, LazyState> {
 }
 
 export default LazyHydrate;
+
+export { default as useLazyHydration } from "./hook";

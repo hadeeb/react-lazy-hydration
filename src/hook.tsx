@@ -8,7 +8,10 @@ import React, {
 } from "react";
 import { LazyProps } from "./index";
 
-export function useLazyHydration(component: ComponentType, props: LazyProps) {
+export default function useLazyHydration(
+  component: ComponentType,
+  props: LazyProps
+) {
   const { ssrOnly, whenIdle, whenVisible } = props;
 
   if (!ssrOnly && !whenIdle && !whenVisible) {
