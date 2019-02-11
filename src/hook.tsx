@@ -1,4 +1,11 @@
-import React, { ComponentType, useLayoutEffect, useRef, useState } from "react";
+import React, {
+  ComponentType,
+  useLayoutEffect,
+  useEffect,
+  useRef,
+  useState,
+  MutableRefObject
+} from "react";
 import { LazyProps } from "./index";
 
 export function useLazyHydration(component: ComponentType, props: LazyProps) {
@@ -7,30 +14,31 @@ export function useLazyHydration(component: ComponentType, props: LazyProps) {
   if (!ssrOnly && !whenIdle && !whenVisible) {
     console.warn(`LazyHydrate: Set atleast one of the props to 'true'`);
   }
-  const [hydrated, setHydrated] = useState(typeof window === "undefined");
-  const childRef = useRef(null);
 
-  const cleanupFns = useRef([]);
+  const [hydrated, setHydrated] = useState(typeof window === "undefined");
+  const childRef: MutableRefObject<HTMLDivElement> = useRef(null);
+  const cleanupFns: MutableRefObject<Array<Function>> = useRef([]);
 
   function cleanup() {
     while (cleanupFns.current.length > 0) cleanupFns.current.pop()();
   }
 
   function hydrate() {
-    setHydrated(true);
+    if (!hydrated) setHydrated(true);
     cleanup();
   }
 
-  const io = useRef(null);
+  const io: MutableRefObject<IntersectionObserver> = useRef(null);
 
   useLayoutEffect(() => {
     if (childRef.current.childElementCount === 0) {
       // No SSR rendered content.
       hydrate();
-      return;
     }
+  }, []);
 
-    if (ssrOnly) return;
+  useEffect(() => {
+    if (hydrated || ssrOnly) return;
 
     if (whenIdle) {
       // @ts-ignore
@@ -63,9 +71,7 @@ export function useLazyHydration(component: ComponentType, props: LazyProps) {
           });
         });
         io.current.observe(childRef.current.children[0]);
-        cleanupFns.current.push(() =>
-          io.current.unobserve(childRef.current.children[0])
-        );
+        cleanupFns.current.push(() => io.current.disconnect());
       } else {
         hydrate();
       }
