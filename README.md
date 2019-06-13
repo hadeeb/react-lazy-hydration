@@ -49,7 +49,7 @@ import { useLazyHydration } from "react-lazy-hydration";
 import Mycomponent from "...";
 
 function App() {
-  const [LazyComponent, hydarated] = useLazyHydration(MyComponent, {
+  const [LazyComponent, hydrated] = useLazyHydration(MyComponent, {
     ssrOnly: true /*,
     whenVisible: false,
     whenIdle: false */
