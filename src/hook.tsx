@@ -91,6 +91,7 @@ export default function useLazyHydration(
     <div
       ref={childRef}
       style={{ display: "contents" }}
+      suppressHydrationWarning
       dangerouslySetInnerHTML={{ __html: "" }}
     />
   );
