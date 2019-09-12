@@ -105,6 +105,7 @@ class LazyHydrate extends Component<LazyProps, LazyState> {
         <div
           ref={this.childRef}
           style={{ display: "contents" }}
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: "" }}
         />
       );
