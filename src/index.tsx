@@ -1,118 +1,106 @@
-import React, { Component, createRef } from "react";
+import * as React from "react";
 
 export type LazyProps = {
-  ssrOnly: boolean;
-  whenIdle: boolean;
-  whenVisible: boolean;
+  ssrOnly?: boolean;
+  whenIdle?: boolean;
+  whenVisible?: boolean;
 };
 
-type LazyState = {
-  hydrated: boolean;
-};
+type VoidFunction = () => void;
 
-class LazyHydrate extends Component<LazyProps, LazyState> {
-  childRef: React.RefObject<HTMLDivElement>;
-  cleanupFns: Array<Function>;
-  io: IntersectionObserver;
+const LazyHydrate: React.FunctionComponent<LazyProps> = function(props) {
+  const childRef = React.useRef<HTMLDivElement>(null);
+  const cleanupFns = React.useRef<VoidFunction[]>([]);
+  const io = React.useRef<IntersectionObserver>(null);
+  const idleCallbackId = React.useRef<number>(null);
 
-  constructor(props: LazyProps) {
-    super(props);
-    this.state = {
-      // Always render on server
-      hydrated: typeof window === "undefined"
-    };
+  // Always render on server
+  const [hydrated, setHydrated] = React.useState(typeof window === "undefined");
 
-    const { ssrOnly, whenIdle, whenVisible } = props;
+  const { ssrOnly, whenIdle, whenVisible, children } = props;
 
-    if (!ssrOnly && !whenIdle && !whenVisible) {
-      console.warn(`LazyHydrate: Set atleast one of the props to 'true'`);
-    }
-
-    this.childRef = createRef();
-    this.cleanupFns = [];
-    this.hydrate = this.hydrate.bind(this);
-
-    this.io =
-      typeof IntersectionObserver !== "undefined"
-        ? new IntersectionObserver(entries => {
-            entries.forEach(entry => {
-              if (
-                entry.target.parentElement === this.childRef.current &&
-                (entry.isIntersecting || entry.intersectionRatio > 0)
-              ) {
-                this.hydrate();
-              }
-            });
-          })
-        : null;
+  if (!ssrOnly && !whenIdle && !whenVisible) {
+    console.warn(`LazyHydrate: Set atleast one of the props to 'true'`);
   }
 
-  hydrate() {
-    this.setState({ hydrated: true });
-    while (this.cleanupFns.length > 0) this.cleanupFns.pop()();
-  }
-
-  componentDidMount() {
-    if (this.childRef.current.childElementCount === 0) {
-      // No SSR rendered content.
-      this.hydrate();
-      return;
+  React.useLayoutEffect(() => {
+    // No SSR Content
+    if (childRef.current.childElementCount === 0) {
+      setHydrated(true);
     }
+  }, []);
 
-    const { ssrOnly, whenIdle, whenVisible } = this.props;
-
-    if (ssrOnly) return;
+  React.useEffect(() => {
+    if (ssrOnly || hydrated) return;
+    function cleanup() {
+      cleanupFns.current.pop()();
+    }
+    function hydrate() {
+      setHydrated(true);
+      cleanup();
+    }
 
     if (whenIdle) {
       // @ts-ignore
-      if (window.requestIdleCallback) {
+      if (requestIdleCallback) {
         // @ts-ignore
-        const id = window.requestIdleCallback(
-          () => requestAnimationFrame(() => this.hydrate()),
+        idleCallbackId.current = requestIdleCallback(
+          () => requestAnimationFrame(() => hydrate()),
           {
             timeout: 500
           }
         );
-        // @ts-ignore
-        this.cleanupFns.push[() => cancelIdleCallback(id)];
+        cleanupFns.current.push(() =>
+          // @ts-ignore
+          cancelIdleCallback(idleCallbackId.current)
+        );
       } else {
-        this.hydrate();
+        return hydrate();
       }
     }
 
     if (whenVisible) {
-      if (this.io) {
+      if (io.current === null && typeof IntersectionObserver !== "undefined") {
+        io.current = new IntersectionObserver(entries => {
+          entries.forEach(entry => {
+            if (
+              entry.target.parentElement === childRef.current &&
+              (entry.isIntersecting || entry.intersectionRatio > 0)
+            ) {
+              hydrate();
+            }
+          });
+        });
+      }
+      if (io.current) {
         // As root node does not have any box model, it cannot intersect.
-        this.io.observe(this.childRef.current.children[0]);
-        this.cleanupFns.push(() =>
-          this.io.unobserve(this.childRef.current.children[0])
+        io.current.observe(childRef.current.children[0]);
+        cleanupFns.current.push(() =>
+          io.current.unobserve(childRef.current.children[0])
         );
       } else {
-        this.hydrate();
+        return hydrate();
       }
     }
-  }
+    return cleanup;
+  }, [hydrated, ssrOnly, whenIdle, whenVisible]);
 
-  render() {
-    if (this.state.hydrated) {
-      return (
-        <div ref={this.childRef} style={{ display: "contents" }}>
-          {this.props.children}
-        </div>
-      );
-    } else {
-      return (
-        <div
-          ref={this.childRef}
-          style={{ display: "contents" }}
-          suppressHydrationWarning
-          dangerouslySetInnerHTML={{ __html: "" }}
-        />
-      );
-    }
+  if (hydrated) {
+    return (
+      <div ref={childRef} style={{ display: "contents" }}>
+        {children}
+      </div>
+    );
+  } else {
+    return (
+      <div
+        ref={childRef}
+        style={{ display: "contents" }}
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{ __html: "" }}
+      />
+    );
   }
-}
+};
 
 export default LazyHydrate;
-
-export { default as useLazyHydration } from "./hook";

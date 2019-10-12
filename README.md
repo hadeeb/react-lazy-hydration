@@ -40,29 +40,6 @@ function App() {
 }
 ```
 
-### Hook!
-
-```jsx
-import React from "react";
-import { useLazyHydration } from "react-lazy-hydration";
-
-import Mycomponent from "...";
-
-function App() {
-  const [LazyComponent, hydrated] = useLazyHydration(MyComponent, {
-    ssrOnly: true /*,
-    whenVisible: false,
-    whenIdle: false */
-  });
-
-  return (
-    <div>
-      <LazyComponent />
-    </div>
-  );
-}
-```
-
 ## Notes
 
 Based on this [comment](https://github.com/facebook/react/issues/10923#issuecomment-338715787)

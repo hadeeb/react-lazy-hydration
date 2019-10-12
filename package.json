@@ -2,9 +2,10 @@
   "name": "react-lazy-hydration",
   "version": "0.0.2",
   "description": "Lazy Hydration for Server Rendered React Components",
+  "source": "src/index.tsx",
   "main": "dist/index.js",
-  "module": "es/index.js",
-  "typings": "es/index.d.ts",
+  "module": "dist/index.m.js",
+  "typings": "dist/index.d.ts",
   "author": {
     "name": "Hadeeb Farhan",
     "email": "hadeebfarhan1@gmail.com"
@@ -13,7 +14,6 @@
   "sideEffects": false,
   "files": [
     "src",
-    "es",
     "dist"
   ],
   "repository": {
@@ -31,33 +31,31 @@
     "hydration"
   ],
   "scripts": {
-    "build": "yarn build:commonjs && yarn build:es",
-    "build:commonjs": "cross-env BABEL_ENV=commonjs babel src --out-dir dist --extensions '.ts','.tsx'",
-    "build:es": "cross-env BABEL_ENV=es babel src --out-dir es --extensions '.ts','.tsx'",
-    "types": "tsc",
-    "prebuild": "rimraf dist es",
-    "postbuild": "yarn types",
-    "prepublishOnly": "yarn build"
-  },
-  "dependencies": {
-    "@babel/runtime": "^7.2.0"
+    "build": "microbundle build --raw -f es,cjs",
+    "prepublishOnly": "yarn build",
+    "lint": "eslint src/** --fix"
   },
   "peerDependencies": {
     "react": ">=16.3.0"
   },
   "devDependencies": {
-    "@babel/cli": "^7.2.3",
-    "@babel/core": "^7.2.2",
-    "@babel/plugin-proposal-class-properties": "^7.2.3",
-    "@babel/plugin-transform-react-jsx": "^7.2.0",
-    "@babel/plugin-transform-runtime": "^7.2.0",
-    "@babel/preset-env": "^7.2.3",
-    "@babel/preset-typescript": "^7.1.0",
     "@types/react": "^16.8.2",
-    "cross-env": "^5.2.0",
+    "@typescript-eslint/eslint-plugin": "2.x",
+    "@typescript-eslint/parser": "2.x",
+    "babel-eslint": "10.x",
+    "eslint": "6.x",
+    "eslint-config-prettier": "^6.4.0",
+    "eslint-config-react-app": "^5.0.2",
+    "eslint-plugin-flowtype": "3.x",
+    "eslint-plugin-import": "2.x",
+    "eslint-plugin-jsx-a11y": "6.x",
+    "eslint-plugin-prettier": "^3.1.1",
+    "eslint-plugin-react": "7.x",
+    "eslint-plugin-react-hooks": "1.x",
+    "eslint-plugin-simple-import-sort": "^4.0.0",
+    "microbundle": "^0.11.0",
+    "prettier": "^1.18.2",
     "react": "^16.8.1",
-    "react-dom": "^16.8.1",
-    "tslib": "^1.9.3",
     "typescript": "^3.2.4"
   }
 }
