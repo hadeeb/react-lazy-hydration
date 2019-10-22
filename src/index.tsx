@@ -8,6 +8,16 @@ export type LazyProps = {
 
 type VoidFunction = () => void;
 
+const isBrowser =
+  typeof window !== "undefined" &&
+  typeof window.document !== "undefined" &&
+  typeof window.document.createElement !== "undefined";
+
+// React currently throws a warning when using useLayoutEffect on the server.
+const useIsomorphicLayoutEffect = isBrowser
+  ? React.useLayoutEffect
+  : React.useEffect;
+
 const LazyHydrate: React.FunctionComponent<LazyProps> = function(props) {
   const childRef = React.useRef<HTMLDivElement>(null);
   const cleanupFns = React.useRef<VoidFunction[]>([]);
@@ -15,7 +25,7 @@ const LazyHydrate: React.FunctionComponent<LazyProps> = function(props) {
   const idleCallbackId = React.useRef<number>(null);
 
   // Always render on server
-  const [hydrated, setHydrated] = React.useState(typeof window === "undefined");
+  const [hydrated, setHydrated] = React.useState(!isBrowser);
 
   const { ssrOnly, whenIdle, whenVisible, children } = props;
 
@@ -23,7 +33,7 @@ const LazyHydrate: React.FunctionComponent<LazyProps> = function(props) {
     console.warn(`LazyHydrate: Set atleast one of the props to 'true'`);
   }
 
-  React.useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     // No SSR Content
     if (childRef.current.childElementCount === 0) {
       setHydrated(true);
@@ -33,7 +43,9 @@ const LazyHydrate: React.FunctionComponent<LazyProps> = function(props) {
   React.useEffect(() => {
     if (ssrOnly || hydrated) return;
     function cleanup() {
-      cleanupFns.current.pop()();
+      while (cleanupFns.current.length) {
+        cleanupFns.current.pop()();
+      }
     }
     function hydrate() {
       setHydrated(true);
