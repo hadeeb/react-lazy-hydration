@@ -7,6 +7,9 @@ export type LazyProps = {
   on?: (keyof HTMLElementEventMap)[];
 };
 
+type Props = Omit<React.HTMLProps<HTMLDivElement>, "dangerouslySetInnerHTML"> &
+  LazyProps;
+
 type VoidFunction = () => void;
 
 const isBrowser =
@@ -19,19 +22,27 @@ const useIsomorphicLayoutEffect = isBrowser
   ? React.useLayoutEffect
   : React.useEffect;
 
-const LazyHydrate: React.FunctionComponent<LazyProps> = function(props) {
+const LazyHydrate: React.FunctionComponent<Props> = function(props) {
   const childRef = React.useRef<HTMLDivElement>(null);
   const cleanupFns = React.useRef<VoidFunction[]>([]);
   const io = React.useRef<IntersectionObserver>(null);
-  const idleCallbackId = React.useRef<number>(null);
 
   // Always render on server
   const [hydrated, setHydrated] = React.useState(!isBrowser);
 
-  const { ssrOnly, whenIdle, whenVisible, on = [], children } = props;
+  const { ssrOnly, whenIdle, whenVisible, on = [], children, ...rest } = props;
 
-  if (!ssrOnly && !whenIdle && !whenVisible) {
-    console.warn(`LazyHydrate: Set atleast one of the props to 'true'`);
+  if (
+    process.env.NODE_ENV !== "production" &&
+    !ssrOnly &&
+    !whenIdle &&
+    !whenVisible &&
+    !on.length
+  ) {
+    console.error(
+      `LazyHydration: Enable atleast one trigger for hydration.\n` +
+        `If you don't want to hydrate, use ssrOnly`
+    );
   }
 
   useIsomorphicLayoutEffect(() => {
@@ -50,14 +61,13 @@ const LazyHydrate: React.FunctionComponent<LazyProps> = function(props) {
     }
     function hydrate() {
       setHydrated(true);
-      cleanup();
     }
 
     if (whenIdle) {
       // @ts-ignore
       if (requestIdleCallback) {
         // @ts-ignore
-        idleCallbackId.current = requestIdleCallback(
+        const idleCallbackId = requestIdleCallback(
           () => requestAnimationFrame(() => hydrate()),
           {
             timeout: 500
@@ -65,10 +75,10 @@ const LazyHydrate: React.FunctionComponent<LazyProps> = function(props) {
         );
         cleanupFns.current.push(() =>
           // @ts-ignore
-          cancelIdleCallback(idleCallbackId.current)
+          cancelIdleCallback(idleCallbackId)
         );
       } else {
-        return hydrate();
+        setTimeout(hydrate, 2000);
       }
     }
 
@@ -111,7 +121,7 @@ const LazyHydrate: React.FunctionComponent<LazyProps> = function(props) {
 
   if (hydrated) {
     return (
-      <div ref={childRef} style={{ display: "contents" }}>
+      <div ref={childRef} style={{ display: "contents" }} {...rest}>
         {children}
       </div>
     );
@@ -121,6 +131,7 @@ const LazyHydrate: React.FunctionComponent<LazyProps> = function(props) {
         ref={childRef}
         style={{ display: "contents" }}
         suppressHydrationWarning
+        {...rest}
         dangerouslySetInnerHTML={{ __html: "" }}
       />
     );
