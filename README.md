@@ -35,6 +35,10 @@ function App() {
       <LazyHydrate whenIdle>
         {...}
       </LazyHydrate>
+      {/* Hydrate on any of the following events */}
+      <LazyHydrate on={["click","mouseenter",...]}>
+        {...}
+      </LazyHydrate>
     </div>
   );
 }

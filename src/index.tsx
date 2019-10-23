@@ -4,6 +4,7 @@ export type LazyProps = {
   ssrOnly?: boolean;
   whenIdle?: boolean;
   whenVisible?: boolean;
+  on?: (keyof HTMLElementEventMap)[];
 };
 
 type VoidFunction = () => void;
@@ -27,7 +28,7 @@ const LazyHydrate: React.FunctionComponent<LazyProps> = function(props) {
   // Always render on server
   const [hydrated, setHydrated] = React.useState(!isBrowser);
 
-  const { ssrOnly, whenIdle, whenVisible, children } = props;
+  const { ssrOnly, whenIdle, whenVisible, on = [], children } = props;
 
   if (!ssrOnly && !whenIdle && !whenVisible) {
     console.warn(`LazyHydrate: Set atleast one of the props to 'true'`);
@@ -94,6 +95,17 @@ const LazyHydrate: React.FunctionComponent<LazyProps> = function(props) {
         return hydrate();
       }
     }
+
+    on.forEach(event => {
+      childRef.current.addEventListener(event, hydrate, {
+        once: true,
+        capture: true
+      });
+      cleanupFns.current.push(() =>
+        childRef.current.removeEventListener(event, hydrate, { capture: true })
+      );
+    });
+
     return cleanup;
   }, [hydrated, ssrOnly, whenIdle, whenVisible]);
 
