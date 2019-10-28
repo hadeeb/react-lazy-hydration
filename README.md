@@ -36,7 +36,7 @@ function App() {
         {...}
       </LazyHydrate>
       {/* Hydrate on any of the following events */}
-      <LazyHydrate on={["click","mouseenter",...]}>
+      <LazyHydrate on="click" /*OR on={["click","mouseenter",...]} */>
         {...}
       </LazyHydrate>
     </div>

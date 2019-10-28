@@ -4,7 +4,7 @@ export type LazyProps = {
   ssrOnly?: boolean;
   whenIdle?: boolean;
   whenVisible?: boolean;
-  on?: (keyof HTMLElementEventMap)[];
+  on?: (keyof HTMLElementEventMap)[] | keyof HTMLElementEventMap;
 };
 
 type Props = Omit<React.HTMLProps<HTMLDivElement>, "dangerouslySetInnerHTML"> &
@@ -69,21 +69,19 @@ const LazyHydrate: React.FunctionComponent<Props> = function(props) {
         // @ts-ignore
         const idleCallbackId = requestIdleCallback(
           () => requestAnimationFrame(() => hydrate()),
-          {
-            timeout: 500
-          }
+          { timeout: 500 }
         );
-        cleanupFns.current.push(() =>
+        cleanupFns.current.push(() => {
           // @ts-ignore
-          cancelIdleCallback(idleCallbackId)
-        );
+          cancelIdleCallback(idleCallbackId);
+        });
       } else {
         setTimeout(hydrate, 2000);
       }
     }
 
     if (whenVisible) {
-      if (io.current === null && typeof IntersectionObserver !== "undefined") {
+      if (io.current === null && IntersectionObserver) {
         io.current = new IntersectionObserver(entries => {
           entries.forEach(entry => {
             if (
@@ -98,26 +96,28 @@ const LazyHydrate: React.FunctionComponent<Props> = function(props) {
       if (io.current) {
         // As root node does not have any box model, it cannot intersect.
         io.current.observe(childRef.current.children[0]);
-        cleanupFns.current.push(() =>
-          io.current.unobserve(childRef.current.children[0])
-        );
+        cleanupFns.current.push(() => {
+          io.current.unobserve(childRef.current.children[0]);
+        });
       } else {
         return hydrate();
       }
     }
 
-    on.forEach(event => {
+    const events = Array.isArray(on) ? on : [on];
+
+    events.forEach(event => {
       childRef.current.addEventListener(event, hydrate, {
         once: true,
         capture: true
       });
-      cleanupFns.current.push(() =>
-        childRef.current.removeEventListener(event, hydrate, { capture: true })
-      );
+      cleanupFns.current.push(() => {
+        childRef.current.removeEventListener(event, hydrate, { capture: true });
+      });
     });
 
     return cleanup;
-  }, [hydrated, ssrOnly, whenIdle, whenVisible]);
+  }, [hydrated, on, ssrOnly, whenIdle, whenVisible]);
 
   if (hydrated) {
     return (
