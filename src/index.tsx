@@ -93,7 +93,7 @@ const LazyHydrate: React.FunctionComponent<Props> = function(props) {
           });
         });
       }
-      if (io.current) {
+      if (io.current && childRef.current.childElementCount !== 0) {
         // As root node does not have any box model, it cannot intersect.
         io.current.observe(childRef.current.children[0]);
         cleanupFns.current.push(() => {
