@@ -17,6 +17,14 @@ const isBrowser =
   typeof window.document !== "undefined" &&
   typeof window.document.createElement !== "undefined";
 
+const passiveEvents: (keyof HTMLElementEventMap)[] = [
+  "wheel",
+  "scroll",
+  "mouseenter",
+  "touchstart",
+  "touchmove"
+];
+
 // React currently throws a warning when using useLayoutEffect on the server.
 const useIsomorphicLayoutEffect = isBrowser
   ? React.useLayoutEffect
@@ -107,10 +115,9 @@ const LazyHydrate: React.FunctionComponent<Props> = function(props) {
     const events = Array.isArray(on) ? on : [on];
 
     events.forEach(event => {
-      childRef.current.addEventListener(event, hydrate, {
-        once: true,
-        capture: true
-      });
+      const options = { once: true, capture: true };
+      if (passiveEvents.includes(event)) options["passive"] = true;
+      childRef.current.addEventListener(event, hydrate, options);
       cleanupFns.current.push(() => {
         childRef.current.removeEventListener(event, hydrate, { capture: true });
       });
