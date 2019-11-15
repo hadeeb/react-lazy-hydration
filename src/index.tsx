@@ -109,7 +109,8 @@ const LazyHydrate: React.FunctionComponent<Props> = function(props) {
     events.forEach(event => {
       childRef.current.addEventListener(event, hydrate, {
         once: true,
-        capture: true
+        capture: true,
+        passive: true
       });
       cleanupFns.current.push(() => {
         childRef.current.removeEventListener(event, hydrate, { capture: true });
