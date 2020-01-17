@@ -1,6 +1,6 @@
 {
   "name": "react-lazy-hydration",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Lazy Hydration for Server Rendered React Components",
   "source": "src/index.tsx",
   "main": "dist/index.js",
