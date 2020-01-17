@@ -17,6 +17,19 @@ const isBrowser =
   typeof window.document !== "undefined" &&
   typeof window.document.createElement !== "undefined";
 
+const event = "hydrate";
+
+const io =
+  isBrowser && IntersectionObserver
+    ? new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting || entry.intersectionRatio > 0) {
+            entry.target.dispatchEvent(new CustomEvent(event));
+          }
+        });
+      })
+    : null;
+
 // React currently throws a warning when using useLayoutEffect on the server.
 const useIsomorphicLayoutEffect = isBrowser
   ? React.useLayoutEffect
@@ -24,8 +37,6 @@ const useIsomorphicLayoutEffect = isBrowser
 
 const LazyHydrate: React.FunctionComponent<Props> = function(props) {
   const childRef = React.useRef<HTMLDivElement>(null);
-  const cleanupFns = React.useRef<VoidFunction[]>([]);
-  const io = React.useRef<IntersectionObserver>(null);
 
   // Always render on server
   const [hydrated, setHydrated] = React.useState(!isBrowser);
@@ -47,16 +58,17 @@ const LazyHydrate: React.FunctionComponent<Props> = function(props) {
 
   useIsomorphicLayoutEffect(() => {
     // No SSR Content
-    if (childRef.current.childElementCount === 0) {
+    if (!childRef.current.hasChildNodes()) {
       setHydrated(true);
     }
   }, []);
 
   React.useEffect(() => {
     if (ssrOnly || hydrated) return;
+    const cleanupFns: VoidFunction[] = [];
     function cleanup() {
-      while (cleanupFns.current.length) {
-        cleanupFns.current.pop()();
+      while (cleanupFns.length) {
+        cleanupFns.pop()();
       }
     }
     function hydrate() {
@@ -67,44 +79,35 @@ const LazyHydrate: React.FunctionComponent<Props> = function(props) {
       // @ts-ignore
       if (requestIdleCallback) {
         // @ts-ignore
-        const idleCallbackId = requestIdleCallback(
-          () => requestAnimationFrame(() => hydrate()),
-          { timeout: 500 }
-        );
-        cleanupFns.current.push(() => {
+        const idleCallbackId = requestIdleCallback(hydrate, { timeout: 500 });
+        cleanupFns.push(() => {
           // @ts-ignore
           cancelIdleCallback(idleCallbackId);
         });
       } else {
-        setTimeout(hydrate, 2000);
+        const id = setTimeout(hydrate, 2000);
+        cleanupFns.push(() => {
+          clearTimeout(id);
+        });
       }
     }
 
+    let events = Array.isArray(on) ? on.slice() : [on];
+
     if (whenVisible) {
-      if (io.current === null && IntersectionObserver) {
-        io.current = new IntersectionObserver(entries => {
-          entries.forEach(entry => {
-            if (
-              entry.target.parentElement === childRef.current &&
-              (entry.isIntersecting || entry.intersectionRatio > 0)
-            ) {
-              hydrate();
-            }
-          });
-        });
-      }
-      if (io.current && childRef.current.childElementCount !== 0) {
+      if (io && childRef.current.childElementCount) {
         // As root node does not have any box model, it cannot intersect.
-        io.current.observe(childRef.current.children[0]);
-        cleanupFns.current.push(() => {
-          io.current.unobserve(childRef.current.children[0]);
+        const el = childRef.current.children[0];
+        io.observe(el);
+        events.push(event as keyof HTMLElementEventMap);
+
+        cleanupFns.push(() => {
+          io.unobserve(el);
         });
       } else {
         return hydrate();
       }
     }
-
-    const events = Array.isArray(on) ? on : [on];
 
     events.forEach(event => {
       childRef.current.addEventListener(event, hydrate, {
@@ -112,7 +115,7 @@ const LazyHydrate: React.FunctionComponent<Props> = function(props) {
         capture: true,
         passive: true
       });
-      cleanupFns.current.push(() => {
+      cleanupFns.push(() => {
         childRef.current.removeEventListener(event, hydrate, { capture: true });
       });
     });
