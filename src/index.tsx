@@ -21,13 +21,18 @@ const event = "hydrate";
 
 const io =
   isBrowser && IntersectionObserver
-    ? new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting || entry.intersectionRatio > 0) {
-            entry.target.dispatchEvent(new CustomEvent(event));
-          }
-        });
-      })
+    ? new IntersectionObserver(
+        entries => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting || entry.intersectionRatio > 0) {
+              entry.target.dispatchEvent(new CustomEvent(event));
+            }
+          });
+        },
+        {
+          rootMargin: "150px"
+        }
+      )
     : null;
 
 // React currently throws a warning when using useLayoutEffect on the server.
