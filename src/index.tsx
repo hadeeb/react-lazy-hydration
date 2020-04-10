@@ -2,6 +2,13 @@ import * as React from "react";
 
 import { isBrowser, isDev } from "./constants.macro";
 
+import { warnAboutDeprecation } from "./utils";
+
+export * from "./onEvents";
+export * from "./ssrOnly";
+export * from "./whenIdle";
+export * from "./whenVisible";
+
 export type LazyProps = {
   ssrOnly?: boolean;
   whenIdle?: boolean;
@@ -57,6 +64,11 @@ const LazyHydrate: React.FunctionComponent<Props> = function(props) {
     if (!childRef.current.hasChildNodes()) {
       setHydrated(true);
     }
+  }, []);
+
+  React.useEffect(() => {
+    warnAboutDeprecation({ on, ssrOnly, whenIdle, whenVisible });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   React.useEffect(() => {
