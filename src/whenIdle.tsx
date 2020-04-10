@@ -10,30 +10,20 @@ function HydrateOnIdle({ children, ...rest }: Props) {
   React.useEffect(() => {
     if (hydrated) return;
 
-    const cleanupFns: VoidFunction[] = [];
-
-    function cleanup() {
-      for (let i = 0; i < cleanupFns.length; i++) {
-        cleanupFns[i]();
-      }
-    }
-
     // @ts-ignore
     if (requestIdleCallback) {
       // @ts-ignore
       const idleCallbackId = requestIdleCallback(hydrate, { timeout: 500 });
-      cleanupFns.push(() => {
+      return () => {
         // @ts-ignore
         cancelIdleCallback(idleCallbackId);
-      });
+      };
     } else {
       const id = setTimeout(hydrate, 2000);
-      cleanupFns.push(() => {
+      return () => {
         clearTimeout(id);
-      });
+      };
     }
-
-    return cleanup;
   }, [hydrated, hydrate]);
 
   if (hydrated) {
