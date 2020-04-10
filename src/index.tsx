@@ -1,5 +1,7 @@
 import * as React from "react";
 
+import { isBrowser, isDev } from "./constants.macro";
+
 export type LazyProps = {
   ssrOnly?: boolean;
   whenIdle?: boolean;
@@ -11,11 +13,6 @@ type Props = Omit<React.HTMLProps<HTMLDivElement>, "dangerouslySetInnerHTML"> &
   LazyProps;
 
 type VoidFunction = () => void;
-
-const isBrowser =
-  typeof window !== "undefined" &&
-  typeof window.document !== "undefined" &&
-  typeof window.document.createElement !== "undefined";
 
 const event = "hydrate";
 
@@ -48,13 +45,7 @@ const LazyHydrate: React.FunctionComponent<Props> = function(props) {
 
   const { ssrOnly, whenIdle, whenVisible, on = [], children, ...rest } = props;
 
-  if (
-    process.env.NODE_ENV !== "production" &&
-    !ssrOnly &&
-    !whenIdle &&
-    !whenVisible &&
-    !on.length
-  ) {
+  if (isDev && !ssrOnly && !whenIdle && !whenVisible && !on.length) {
     console.error(
       `LazyHydration: Enable atleast one trigger for hydration.\n` +
         `If you don't want to hydrate, use ssrOnly`

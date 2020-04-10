@@ -4,8 +4,12 @@
   "description": "Lazy Hydration for Server Rendered React Components",
   "source": "src/index.tsx",
   "main": "dist/index.js",
-  "module": "dist/index.m.js",
-  "typings": "dist/index.d.ts",
+  "module": "dist/index.esm.js",
+  "browser": {
+    "dist/index.js": "dist/index.browser.js",
+    "dist/index.esm.js": "dist/index.brower.esm.js"
+  },
+  "typings": "types/index.d.ts",
   "author": {
     "name": "Hadeeb Farhan",
     "email": "hadeebfarhan1@gmail.com"
@@ -13,8 +17,8 @@
   "license": "MIT",
   "sideEffects": false,
   "files": [
-    "src",
-    "dist"
+    "dist",
+    "types"
   ],
   "repository": {
     "type": "git",
@@ -31,34 +35,50 @@
     "hydration"
   ],
   "scripts": {
-    "build": "microbundle build --raw -f es,cjs",
+    "prebuild": "rimraf dist types",
+    "build": "rollup -c",
+    "postbuild": "tsc",
     "prepublishOnly": "yarn build",
     "lint": "eslint src/** --fix"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.9.2"
   },
   "peerDependencies": {
     "react": ">=16.8.0"
   },
   "devDependencies": {
-    "@types/react": "^16.9.17",
-    "@typescript-eslint/eslint-plugin": "^2.16.0",
-    "@typescript-eslint/parser": "^2.16.0",
-    "babel-eslint": "^10.0.3",
+    "@babel/core": "^7.9.0",
+    "@babel/helper-module-imports": "^7.8.3",
+    "@babel/plugin-transform-react-jsx": "^7.9.4",
+    "@babel/plugin-transform-runtime": "^7.9.0",
+    "@babel/preset-env": "^7.9.5",
+    "@babel/preset-typescript": "^7.9.0",
+    "@types/react": "^16.9.32",
+    "@typescript-eslint/eslint-plugin": "^2.27.0",
+    "@typescript-eslint/parser": "^2.27.0",
+    "babel-eslint": "^10.1.0",
+    "babel-plugin-macros": "^2.8.0",
     "eslint": "^6.8.0",
-    "eslint-config-prettier": "^6.9.0",
-    "eslint-config-react-app": "^5.1.0",
-    "eslint-plugin-flowtype": "^4.6.0",
-    "eslint-plugin-import": "^2.20.0",
+    "eslint-config-prettier": "^6.10.1",
+    "eslint-config-react-app": "^5.2.1",
+    "eslint-plugin-flowtype": "^4.7.0",
+    "eslint-plugin-import": "^2.20.2",
     "eslint-plugin-jsx-a11y": "^6.2.3",
     "eslint-plugin-prettier": "^3.1.2",
-    "eslint-plugin-react": "^7.18.0",
-    "eslint-plugin-react-hooks": "^2.3.0",
-    "eslint-plugin-simple-import-sort": "^5.0.0",
-    "husky": "^4.0.10",
-    "lint-staged": "^9.5.0",
-    "microbundle": "^0.11.0",
+    "eslint-plugin-react": "^7.19.0",
+    "eslint-plugin-react-hooks": "^3.0.0",
+    "eslint-plugin-simple-import-sort": "^5.0.2",
+    "husky": "^4.2.3",
+    "lint-staged": "^10.1.2",
     "prettier": "^1.19.1",
-    "react": "^16.12.0",
-    "typescript": "^3.7.5"
+    "react": "^16.13.1",
+    "rimraf": "^3.0.2",
+    "rollup": "^2.4.0",
+    "rollup-plugin-babel": "^4.4.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-replace": "^2.2.0",
+    "typescript": "^3.8.3"
   },
   "husky": {
     "hooks": {
@@ -66,7 +86,7 @@
     }
   },
   "lint-staged": {
-    "*.js": [
+    "*.{js,ts,tsx}": [
       "eslint --fix",
       "git add"
     ]

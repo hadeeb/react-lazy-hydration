@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
-    "lib": [
-      "dom",
-      "es2016"
-    ],
-    "jsx": "react",
-  },
+    "lib": ["dom", "ESNext"],
+    "declaration": true,
+    "declarationDir": "./types",
+    "emitDeclarationOnly": true,
+    "jsx": "preserve"
+  }
 }
