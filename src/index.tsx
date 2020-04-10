@@ -1,7 +1,6 @@
 import * as React from "react";
 
 import { isBrowser, isDev } from "./constants.macro";
-
 import { warnAboutDeprecation } from "./utils";
 
 export * from "./onEvents";
@@ -67,11 +66,9 @@ const LazyHydrate: React.FunctionComponent<Props> = function(props) {
   }, []);
 
   React.useEffect(() => {
-    warnAboutDeprecation({ on, ssrOnly, whenIdle, whenVisible });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  React.useEffect(() => {
+    if (isDev) {
+      warnAboutDeprecation({ on, ssrOnly, whenIdle, whenVisible });
+    }
     if (ssrOnly || hydrated) return;
     const cleanupFns: VoidFunction[] = [];
     function cleanup() {
