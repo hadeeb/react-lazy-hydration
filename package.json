@@ -7,7 +7,7 @@
   "module": "dist/index.esm.js",
   "browser": {
     "dist/index.js": "dist/index.browser.js",
-    "dist/index.esm.js": "dist/index.brower.esm.js"
+    "dist/index.esm.js": "dist/index.browser.esm.js"
   },
   "typings": "types/index.d.ts",
   "author": {
