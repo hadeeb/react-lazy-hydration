@@ -9,32 +9,34 @@ type Props = Omit<
   observerOptions?: IntersectionObserverInit;
 };
 
+const hydrationEvent = "hydrate";
+
 function HydrateWhenVisible({ children, observerOptions, ...rest }: Props) {
   const [childRef, hydrated, hydrate] = useHydrationState();
 
   React.useEffect(() => {
     if (hydrated) return;
 
-    const io = IntersectionObserver
-      ? new IntersectionObserver(entries => {
-          // As only one element is observed,
-          // there is no need to loop over the array
-          if (entries.length) {
-            const entry = entries[0];
-            if (entry.isIntersecting || entry.intersectionRatio > 0) {
-              hydrate();
-            }
-          }
-        }, observerOptions)
-      : null;
+    const io = createIntersectionObserver(observerOptions);
 
-    if (io && childRef.current.childElementCount) {
-      // As root node does not have any box model, it cannot intersect.
-      const el = childRef.current.children[0];
-      io.observe(el);
+    // As root node does not have any box model, it cannot intersect.
+    const domElement = childRef.current!.firstElementChild;
+
+    if (io && domElement) {
+      io.observe(domElement);
+
+      domElement.addEventListener(hydrationEvent, hydrate, {
+        once: true,
+        capture: true,
+        passive: true
+      });
 
       return () => {
-        io.unobserve(el);
+        io.unobserve(domElement);
+
+        domElement.removeEventListener(hydrationEvent, hydrate, {
+          capture: true
+        });
       };
     } else {
       hydrate();
@@ -56,6 +58,39 @@ function HydrateWhenVisible({ children, observerOptions, ...rest }: Props) {
       />
     );
   }
+}
+
+const observerCache = new WeakMap<
+  IntersectionObserverInit,
+  IntersectionObserver
+>();
+
+const defaultOptions = {};
+
+function createIntersectionObserver(
+  observerOptions?: IntersectionObserverInit
+) {
+  if (!IntersectionObserver) return null;
+
+  observerOptions = observerOptions || defaultOptions;
+
+  let io = observerCache.get(observerOptions);
+
+  if (!io) {
+    observerCache.set(
+      observerOptions,
+      (io = new IntersectionObserver(entries => {
+        for (let i = 0; i < entries.length; i++) {
+          const entry = entries[i];
+          if (entry.isIntersecting || entry.intersectionRatio > 0) {
+            entry.target.dispatchEvent(new CustomEvent(hydrationEvent));
+          }
+        }
+      }, observerOptions))
+    );
+  }
+
+  return io;
 }
 
 export { HydrateWhenVisible };
