@@ -8,7 +8,7 @@ const useIsomorphicLayoutEffect = isBrowser
   : React.useEffect;
 
 function useHydrationState(): [
-  React.MutableRefObject<HTMLDivElement>,
+  React.MutableRefObject<HTMLDivElement | null>,
   boolean,
   VoidFunction
 ] {
@@ -18,7 +18,7 @@ function useHydrationState(): [
 
   useIsomorphicLayoutEffect(() => {
     // No SSR Content
-    if (!childRef.current.hasChildNodes()) {
+    if (!childRef.current!.hasChildNodes()) {
       setHydrated(true);
     }
   }, []);
@@ -27,15 +27,22 @@ function useHydrationState(): [
     setHydrated(true);
   }, []);
 
-  return React.useMemo(() => [childRef, hydrated, hydrate], [
-    hydrated,
-    hydrate
-  ]);
+  return [childRef, hydrated, hydrate];
 }
 
 const defaultStyle: React.CSSProperties = { display: "contents" };
 
-function warnAboutDeprecation({ on, whenIdle, whenVisible, ssrOnly }) {
+function warnAboutDeprecation({
+  on,
+  whenIdle,
+  whenVisible,
+  ssrOnly
+}: {
+  on?: string | string[];
+  whenIdle?: boolean;
+  whenVisible?: boolean;
+  ssrOnly?: boolean;
+}) {
   console.warn(
     "[%creact-lazy-hydration%c]: Default export is deprecated",
     "font-weight:bold",
