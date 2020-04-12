@@ -5,7 +5,7 @@ import { defaultStyle, useHydrationState } from "./utils";
 type Props = Omit<
   React.HTMLProps<HTMLDivElement>,
   "dangerouslySetInnerHTML"
-> & { on?: (keyof HTMLElementEventMap)[] | keyof HTMLElementEventMap };
+> & { on: (keyof HTMLElementEventMap)[] | keyof HTMLElementEventMap };
 
 function HydrateOn({ children, on, ...rest }: Props) {
   const [childRef, hydrated, hydrate] = useHydrationState();
