@@ -24,7 +24,7 @@ const event = "hydrate";
 
 const io =
   isBrowser && IntersectionObserver
-    ? new IntersectionObserver(
+    ? /*#__PURE__*/ new IntersectionObserver(
         entries => {
           entries.forEach(entry => {
             if (entry.isIntersecting || entry.intersectionRatio > 0) {
