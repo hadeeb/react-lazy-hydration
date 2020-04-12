@@ -23,14 +23,16 @@ function HydrateOn({ children, on, ...rest }: Props) {
 
     let events = Array.isArray(on) ? on.slice() : [on];
 
+    const domElement = childRef.current!;
+
     events.forEach(event => {
-      childRef.current.addEventListener(event, hydrate, {
+      domElement.addEventListener(event, hydrate, {
         once: true,
         capture: true,
         passive: true
       });
       cleanupFns.push(() => {
-        childRef.current.removeEventListener(event, hydrate, { capture: true });
+        domElement.removeEventListener(event, hydrate, { capture: true });
       });
     });
 
