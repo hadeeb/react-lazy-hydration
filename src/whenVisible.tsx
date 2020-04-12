@@ -15,14 +15,6 @@ function HydrateWhenVisible({ children, observerOptions, ...rest }: Props) {
   React.useEffect(() => {
     if (hydrated) return;
 
-    const cleanupFns: VoidFunction[] = [];
-
-    function cleanup() {
-      for (let i = 0; i < cleanupFns.length; i++) {
-        cleanupFns[i]();
-      }
-    }
-
     const io = IntersectionObserver
       ? new IntersectionObserver(entries => {
           // As only one element is observed,
@@ -41,11 +33,9 @@ function HydrateWhenVisible({ children, observerOptions, ...rest }: Props) {
       const el = childRef.current.children[0];
       io.observe(el);
 
-      cleanupFns.push(() => {
+      return () => {
         io.unobserve(el);
-      });
-
-      return cleanup;
+      };
     } else {
       hydrate();
     }
