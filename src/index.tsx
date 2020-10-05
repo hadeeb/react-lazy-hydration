@@ -6,6 +6,7 @@ export type LazyProps = {
   ssrOnly?: boolean;
   whenIdle?: boolean;
   whenVisible?: boolean;
+  noWrapper?: boolean;
   on?: (keyof HTMLElementEventMap)[] | keyof HTMLElementEventMap;
 };
 
@@ -43,7 +44,15 @@ const LazyHydrate: React.FunctionComponent<Props> = function(props) {
   // Always render on server
   const [hydrated, setHydrated] = React.useState(!isBrowser);
 
-  const { ssrOnly, whenIdle, whenVisible, on = [], children, ...rest } = props;
+  const {
+    noWrapper,
+    ssrOnly,
+    whenIdle,
+    whenVisible,
+    on = [],
+    children,
+    ...rest
+  } = props;
 
   if (isDev && !ssrOnly && !whenIdle && !whenVisible && !on.length) {
     console.error(
@@ -120,6 +129,9 @@ const LazyHydrate: React.FunctionComponent<Props> = function(props) {
   }, [hydrated, on, ssrOnly, whenIdle, whenVisible]);
 
   if (hydrated) {
+    if (noWrapper) {
+      return <>{children}</>;
+    }
     return (
       <div ref={childRef} style={{ display: "contents" }} {...rest}>
         {children}
