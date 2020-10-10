@@ -6,6 +6,9 @@ export type LazyProps = {
   ssrOnly?: boolean;
   whenIdle?: boolean;
   whenVisible?: boolean;
+  noWrapper?: boolean;
+  didHydrate?: VoidFunction;
+  promise?: Promise<any>;
   on?: (keyof HTMLElementEventMap)[] | keyof HTMLElementEventMap;
 };
 
@@ -43,9 +46,26 @@ const LazyHydrate: React.FunctionComponent<Props> = function(props) {
   // Always render on server
   const [hydrated, setHydrated] = React.useState(!isBrowser);
 
-  const { ssrOnly, whenIdle, whenVisible, on = [], children, ...rest } = props;
+  const {
+    noWrapper,
+    ssrOnly,
+    whenIdle,
+    whenVisible,
+    promise, // pass a promise which hydrates
+    on = [],
+    children,
+    didHydrate, // callback for hydration
+    ...rest
+  } = props;
 
-  if (isDev && !ssrOnly && !whenIdle && !whenVisible && !on.length) {
+  if (
+    isDev &&
+    !ssrOnly &&
+    !whenIdle &&
+    !whenVisible &&
+    !on.length &&
+    !promise
+  ) {
     console.error(
       `LazyHydration: Enable atleast one trigger for hydration.\n` +
         `If you don't want to hydrate, use ssrOnly`
@@ -69,6 +89,11 @@ const LazyHydrate: React.FunctionComponent<Props> = function(props) {
     }
     function hydrate() {
       setHydrated(true);
+      if (didHydrate) didHydrate();
+    }
+
+    if (promise) {
+      promise.then(hydrate).catch(hydrate);
     }
 
     if (whenIdle) {
@@ -120,6 +145,9 @@ const LazyHydrate: React.FunctionComponent<Props> = function(props) {
   }, [hydrated, on, ssrOnly, whenIdle, whenVisible]);
 
   if (hydrated) {
+    if (noWrapper) {
+      return children;
+    }
     return (
       <div ref={childRef} style={{ display: "contents" }} {...rest}>
         {children}
