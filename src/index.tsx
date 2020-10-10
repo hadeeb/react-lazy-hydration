@@ -40,7 +40,7 @@ const useIsomorphicLayoutEffect = isBrowser
   ? React.useLayoutEffect
   : React.useEffect;
 
-const LazyHydrate: React.FunctionComponent<Props> = function(props) {
+function LazyHydrate(props: Props) {
   const childRef = React.useRef<HTMLDivElement>(null);
 
   // Always render on server
@@ -142,7 +142,7 @@ const LazyHydrate: React.FunctionComponent<Props> = function(props) {
     });
 
     return cleanup;
-  }, [hydrated, on, ssrOnly, whenIdle, whenVisible]);
+  }, [hydrated, on, ssrOnly, whenIdle, whenVisible, didHydrate, promise]);
 
   if (hydrated) {
     if (noWrapper) {
@@ -164,6 +164,6 @@ const LazyHydrate: React.FunctionComponent<Props> = function(props) {
       />
     );
   }
-};
+}
 
 export default LazyHydrate;
