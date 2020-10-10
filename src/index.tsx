@@ -7,7 +7,6 @@ export type LazyProps = {
   whenIdle?: boolean;
   whenVisible?: boolean;
   noWrapper?: boolean;
-  instantHydrate?: boolean;
   didHydrate?: VoidFunction;
   promise?: Promise<any>;
   on?: (keyof HTMLElementEventMap)[] | keyof HTMLElementEventMap;
@@ -53,7 +52,6 @@ const LazyHydrate: React.FunctionComponent<Props> = function(props) {
     whenIdle,
     whenVisible,
     promise, // pass a promise which hydrates
-    instantHydrate, // helpful for unit tests, since this is an invisible component in regards to tests
     on = [],
     children,
     didHydrate, // callback for hydration
@@ -66,7 +64,7 @@ const LazyHydrate: React.FunctionComponent<Props> = function(props) {
     !whenIdle &&
     !whenVisible &&
     !on.length &&
-    !instantHydrate
+    !promise
   ) {
     console.error(
       `LazyHydration: Enable atleast one trigger for hydration.\n` +
@@ -91,10 +89,13 @@ const LazyHydrate: React.FunctionComponent<Props> = function(props) {
     }
     function hydrate() {
       setHydrated(true);
+      if (didHydrate) didHydrate();
     }
+
     if (promise) {
-      promise.then(hydrate);
+      promise.then(hydrate).catch(hydrate);
     }
+
     if (whenIdle) {
       // @ts-ignore
       if (requestIdleCallback) {
@@ -143,7 +144,7 @@ const LazyHydrate: React.FunctionComponent<Props> = function(props) {
     return cleanup;
   }, [hydrated, on, ssrOnly, whenIdle, whenVisible]);
 
-  if (hydrated || instantHydrate) {
+  if (hydrated) {
     if (noWrapper) {
       return children;
     }
