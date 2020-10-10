@@ -9,7 +9,7 @@ export type LazyProps = {
   noWrapper?: boolean;
   instantHydrate?: boolean;
   didHydrate?: VoidFunction;
-  promise?: any;
+  promise?: Promise<any>;
   on?: (keyof HTMLElementEventMap)[] | keyof HTMLElementEventMap;
 };
 
