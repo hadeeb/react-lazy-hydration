@@ -59,7 +59,7 @@ const useIsomorphicLayoutEffect = isBrowser
   ? React.useLayoutEffect
   : React.useEffect;
 
-function LazyHydrate(props: Props) {
+const LazyHydrate: React.FunctionComponent<Props> = function(props) {
   const childRef = React.useRef<HTMLDivElement>(null);
 
   // Always render on server
@@ -189,6 +189,6 @@ function LazyHydrate(props: Props) {
       />
     );
   }
-}
+};
 
 export default LazyHydrate;
