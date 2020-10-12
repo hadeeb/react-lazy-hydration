@@ -150,21 +150,18 @@ const LazyHydrate: React.FunctionComponent<Props> = function(props) {
       }
     }
 
-    const elToListenOn = childRef.current;
-    if (elToListenOn) {
-      events.forEach(event => {
-        elToListenOn.addEventListener(event, hydrate, {
-          once: true,
-          capture: true,
-          passive: true
-        });
-        cleanupFns.push(() => {
-          elToListenOn.removeEventListener(event, hydrate, {
-            capture: true
-          });
+    events.forEach(event => {
+      childRef.current?.addEventListener(event, hydrate, {
+        once: true,
+        capture: true,
+        passive: true
+      });
+      cleanupFns.push(() => {
+        childRef.current?.removeEventListener(event, hydrate, {
+          capture: true
         });
       });
-    }
+    });
 
     return cleanup;
   }, [hydrated, on, ssrOnly, whenIdle, whenVisible, didHydrate, promise]);
