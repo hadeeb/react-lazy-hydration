@@ -2,6 +2,25 @@ import * as React from "react";
 
 import { isBrowser, isDev } from "./constants.macro";
 
+type RequestIdleCallbackHandle = number;
+type RequestIdleCallbackOptions = {
+  timeout: number;
+};
+type RequestIdleCallbackDeadline = {
+  readonly didTimeout: boolean;
+  timeRemaining: () => number;
+};
+
+declare global {
+  interface Window {
+    requestIdleCallback?: (
+      callback: (deadline: RequestIdleCallbackDeadline) => void,
+      opts?: RequestIdleCallbackOptions
+    ) => RequestIdleCallbackHandle;
+    cancelIdleCallback?: (handle: RequestIdleCallbackHandle) => void;
+  }
+}
+
 export type LazyProps = {
   ssrOnly?: boolean;
   whenIdle?: boolean;
@@ -40,7 +59,7 @@ const useIsomorphicLayoutEffect = isBrowser
   ? React.useLayoutEffect
   : React.useEffect;
 
-function LazyHydrate(props: Props) {
+const LazyHydrate: React.FunctionComponent<Props> = function(props) {
   const childRef = React.useRef<HTMLDivElement>(null);
 
   // Always render on server
@@ -74,7 +93,7 @@ function LazyHydrate(props: Props) {
 
   useIsomorphicLayoutEffect(() => {
     // No SSR Content
-    if (!childRef.current.hasChildNodes()) {
+    if (!childRef.current?.hasChildNodes()) {
       setHydrated(true);
     }
   }, []);
@@ -84,7 +103,7 @@ function LazyHydrate(props: Props) {
     const cleanupFns: VoidFunction[] = [];
     function cleanup() {
       while (cleanupFns.length) {
-        cleanupFns.pop()();
+        cleanupFns.pop()!();
       }
     }
     function hydrate() {
@@ -97,13 +116,14 @@ function LazyHydrate(props: Props) {
     }
 
     if (whenIdle) {
-      // @ts-ignore
-      if (requestIdleCallback) {
-        // @ts-ignore
-        const idleCallbackId = requestIdleCallback(hydrate, { timeout: 500 });
+      if (window.requestIdleCallback) {
+        const idleCallbackId = window.requestIdleCallback(hydrate, {
+          timeout: 500
+        });
         cleanupFns.push(() => {
-          // @ts-ignore
-          cancelIdleCallback(idleCallbackId);
+          if (window.cancelIdleCallback) {
+            window.cancelIdleCallback(idleCallbackId);
+          }
         });
       } else {
         const id = setTimeout(hydrate, 2000);
@@ -116,7 +136,7 @@ function LazyHydrate(props: Props) {
     let events = Array.isArray(on) ? on.slice() : [on];
 
     if (whenVisible) {
-      if (io && childRef.current.childElementCount) {
+      if (io && childRef.current?.childElementCount) {
         // As root node does not have any box model, it cannot intersect.
         const el = childRef.current.children[0];
         io.observe(el);
@@ -131,13 +151,15 @@ function LazyHydrate(props: Props) {
     }
 
     events.forEach(event => {
-      childRef.current.addEventListener(event, hydrate, {
+      childRef.current?.addEventListener(event, hydrate, {
         once: true,
         capture: true,
         passive: true
       });
       cleanupFns.push(() => {
-        childRef.current.removeEventListener(event, hydrate, { capture: true });
+        childRef.current?.removeEventListener(event, hydrate, {
+          capture: true
+        });
       });
     });
 
@@ -146,7 +168,7 @@ function LazyHydrate(props: Props) {
 
   if (hydrated) {
     if (noWrapper) {
-      return children;
+      return <>{children}</>;
     }
     return (
       <div ref={childRef} style={{ display: "contents" }} {...rest}>
@@ -164,6 +186,6 @@ function LazyHydrate(props: Props) {
       />
     );
   }
-}
+};
 
 export default LazyHydrate;
