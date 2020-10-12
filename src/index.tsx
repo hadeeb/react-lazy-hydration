@@ -29,6 +29,10 @@ export type LazyProps = {
   didHydrate?: VoidFunction;
   promise?: Promise<any>;
   on?: (keyof HTMLElementEventMap)[] | keyof HTMLElementEventMap;
+  listenOnEl?:
+    | HTMLElementTagNameMap[keyof HTMLElementTagNameMap]
+    | HTMLDocument
+    | Window;
 };
 
 type Props = Omit<React.HTMLProps<HTMLDivElement>, "dangerouslySetInnerHTML"> &
@@ -74,6 +78,7 @@ const LazyHydrate: React.FunctionComponent<Props> = function(props) {
     on = [],
     children,
     didHydrate, // callback for hydration
+    listenOnEl,
     ...rest
   } = props;
 
@@ -150,18 +155,21 @@ const LazyHydrate: React.FunctionComponent<Props> = function(props) {
       }
     }
 
-    events.forEach(event => {
-      childRef.current?.addEventListener(event, hydrate, {
-        once: true,
-        capture: true,
-        passive: true
-      });
-      cleanupFns.push(() => {
-        childRef.current?.removeEventListener(event, hydrate, {
-          capture: true
+    const elToListenOn = listenOnEl || childRef.current;
+    if (elToListenOn) {
+      events.forEach(event => {
+        elToListenOn.addEventListener(event, hydrate, {
+          once: true,
+          capture: true,
+          passive: true
+        });
+        cleanupFns.push(() => {
+          elToListenOn.removeEventListener(event, hydrate, {
+            capture: true
+          });
         });
       });
-    });
+    }
 
     return cleanup;
   }, [hydrated, on, ssrOnly, whenIdle, whenVisible, didHydrate, promise]);
