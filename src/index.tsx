@@ -93,7 +93,7 @@ function LazyHydrate(props: Props) {
 
   useIsomorphicLayoutEffect(() => {
     // No SSR Content
-    if (!childRef.current.hasChildNodes()) {
+    if (!childRef.current?.hasChildNodes()) {
       setHydrated(true);
     }
   }, []);
@@ -103,7 +103,7 @@ function LazyHydrate(props: Props) {
     const cleanupFns: VoidFunction[] = [];
     function cleanup() {
       while (cleanupFns.length) {
-        cleanupFns.pop()();
+        cleanupFns.pop()!();
       }
     }
     function hydrate() {
@@ -136,7 +136,7 @@ function LazyHydrate(props: Props) {
     let events = Array.isArray(on) ? on.slice() : [on];
 
     if (whenVisible) {
-      if (io && childRef.current.childElementCount) {
+      if (io && childRef.current?.childElementCount) {
         // As root node does not have any box model, it cannot intersect.
         const el = childRef.current.children[0];
         io.observe(el);
@@ -150,16 +150,21 @@ function LazyHydrate(props: Props) {
       }
     }
 
-    events.forEach(event => {
-      childRef.current.addEventListener(event, hydrate, {
-        once: true,
-        capture: true,
-        passive: true
+    const elToListenOn = childRef.current;
+    if (elToListenOn) {
+      events.forEach(event => {
+        elToListenOn.addEventListener(event, hydrate, {
+          once: true,
+          capture: true,
+          passive: true
+        });
+        cleanupFns.push(() => {
+          elToListenOn.removeEventListener(event, hydrate, {
+            capture: true
+          });
+        });
       });
-      cleanupFns.push(() => {
-        childRef.current.removeEventListener(event, hydrate, { capture: true });
-      });
-    });
+    }
 
     return cleanup;
   }, [hydrated, on, ssrOnly, whenIdle, whenVisible, didHydrate, promise]);
