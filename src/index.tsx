@@ -171,7 +171,7 @@ const LazyHydrate: React.FunctionComponent<Props> = function(props) {
 
   if (hydrated) {
     if (noWrapper) {
-      return children;
+      return <>{children}</>;
     }
     return (
       <div ref={childRef} style={{ display: "contents" }} {...rest}>
