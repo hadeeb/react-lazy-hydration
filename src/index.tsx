@@ -2,6 +2,25 @@ import * as React from "react";
 
 import { isBrowser, isDev } from "./constants.macro";
 
+type RequestIdleCallbackHandle = number;
+type RequestIdleCallbackOptions = {
+  timeout: number;
+};
+type RequestIdleCallbackDeadline = {
+  readonly didTimeout: boolean;
+  timeRemaining: () => number;
+};
+
+declare global {
+  interface Window {
+    requestIdleCallback?: (
+      callback: (deadline: RequestIdleCallbackDeadline) => void,
+      opts?: RequestIdleCallbackOptions
+    ) => RequestIdleCallbackHandle;
+    cancelIdleCallback?: (handle: RequestIdleCallbackHandle) => void;
+  }
+}
+
 export type LazyProps = {
   ssrOnly?: boolean;
   whenIdle?: boolean;
@@ -97,13 +116,14 @@ function LazyHydrate(props: Props) {
     }
 
     if (whenIdle) {
-      // @ts-ignore
-      if (requestIdleCallback) {
-        // @ts-ignore
-        const idleCallbackId = requestIdleCallback(hydrate, { timeout: 500 });
+      if (window.requestIdleCallback) {
+        const idleCallbackId = window.requestIdleCallback(hydrate, {
+          timeout: 500
+        });
         cleanupFns.push(() => {
-          // @ts-ignore
-          cancelIdleCallback(idleCallbackId);
+          if (window.cancelIdleCallback) {
+            window.cancelIdleCallback(idleCallbackId);
+          }
         });
       } else {
         const id = setTimeout(hydrate, 2000);
