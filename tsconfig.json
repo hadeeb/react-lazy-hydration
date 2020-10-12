@@ -4,6 +4,7 @@
     "declaration": true,
     "declarationDir": "./types",
     "emitDeclarationOnly": true,
-    "jsx": "preserve"
+    "jsx": "preserve",
+    "strict": true
   }
 }
