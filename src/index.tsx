@@ -30,7 +30,7 @@ const io =
           });
         },
         {
-          rootMargin: "150px"
+          rootMargin: "250px"
         }
       )
     : null;
