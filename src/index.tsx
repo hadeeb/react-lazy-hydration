@@ -1,6 +1,12 @@
 import * as React from "react";
 
 import { isBrowser, isDev } from "./constants.macro";
+import { warnAboutDeprecation } from "./utils";
+
+export * from "./onEvents";
+export * from "./ssrOnly";
+export * from "./whenIdle";
+export * from "./whenVisible";
 
 export type LazyProps = {
   ssrOnly?: boolean;
@@ -21,7 +27,7 @@ const event = "hydrate";
 
 const io =
   isBrowser && IntersectionObserver
-    ? new IntersectionObserver(
+    ? /*#__PURE__*/ new IntersectionObserver(
         entries => {
           entries.forEach(entry => {
             if (entry.isIntersecting || entry.intersectionRatio > 0) {
@@ -80,6 +86,9 @@ function LazyHydrate(props: Props) {
   }, []);
 
   React.useEffect(() => {
+    if (isDev) {
+      warnAboutDeprecation({ on, ssrOnly, whenIdle, whenVisible });
+    }
     if (ssrOnly || hydrated) return;
     const cleanupFns: VoidFunction[] = [];
     function cleanup() {
