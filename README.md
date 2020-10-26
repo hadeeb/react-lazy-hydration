@@ -39,6 +39,10 @@ function App() {
       <LazyHydrate on="click" /*OR on={["click","mouseenter",...]} */>
         {...}
       </LazyHydrate>
+      {/* To listen on another element (other than the child ref), pass listenOnEl={someHtmlElement} */ }
+      <LazyHydrate on="click" listenOnEl={window.document}>
+        {...}
+      </LazyHydrate>
     </div>
   );
 }
