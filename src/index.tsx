@@ -20,7 +20,7 @@ type VoidFunction = () => void;
 const event = "hydrate";
 
 const io =
-  isBrowser && IntersectionObserver
+  isBrowser && typeof IntersectionObserver !== "undefined"
     ? new IntersectionObserver(
         entries => {
           entries.forEach(entry => {
@@ -98,7 +98,7 @@ function LazyHydrate(props: Props) {
 
     if (whenIdle) {
       // @ts-ignore
-      if (requestIdleCallback) {
+      if (typeof requestIdleCallback !== "undefined") {
         // @ts-ignore
         const idleCallbackId = requestIdleCallback(hydrate, { timeout: 500 });
         cleanupFns.push(() => {
