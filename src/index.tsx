@@ -39,7 +39,7 @@ type VoidFunction = () => void;
 const event = "hydrate";
 
 const io =
-  isBrowser && IntersectionObserver
+  isBrowser && typeof IntersectionObserver !== "undefined"
     ? new IntersectionObserver(
         entries => {
           entries.forEach(entry => {
@@ -49,7 +49,7 @@ const io =
           });
         },
         {
-          rootMargin: "150px"
+          rootMargin: "250px"
         }
       )
     : null;
@@ -116,10 +116,11 @@ const LazyHydrate: React.FunctionComponent<Props> = function(props) {
     }
 
     if (whenIdle) {
-      if (window.requestIdleCallback) {
+      if (typeof window !== "undefined" && window.requestIdleCallback) {
         const idleCallbackId = window.requestIdleCallback(hydrate, {
           timeout: 500
         });
+
         cleanupFns.push(() => {
           if (window.cancelIdleCallback) {
             window.cancelIdleCallback(idleCallbackId);
