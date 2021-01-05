@@ -10,6 +10,7 @@ export type LazyProps = {
   didHydrate?: VoidFunction;
   promise?: Promise<any>;
   on?: (keyof HTMLElementEventMap)[] | keyof HTMLElementEventMap;
+  rootMargin?: string;
 };
 
 type Props = Omit<React.HTMLProps<HTMLDivElement>, "dangerouslySetInnerHTML"> &
@@ -19,7 +20,7 @@ type VoidFunction = () => void;
 
 const event = "hydrate";
 
-const io =
+const getIntersectionObserver = (rootMargin: string) =>
   isBrowser && typeof IntersectionObserver !== "undefined"
     ? new IntersectionObserver(
         entries => {
@@ -30,7 +31,7 @@ const io =
           });
         },
         {
-          rootMargin: "250px"
+          rootMargin
         }
       )
     : null;
@@ -55,6 +56,7 @@ function LazyHydrate(props: Props) {
     on = [],
     children,
     didHydrate, // callback for hydration
+    rootMargin = "250px",
     ...rest
   } = props;
 
@@ -116,6 +118,7 @@ function LazyHydrate(props: Props) {
     let events = Array.isArray(on) ? on.slice() : [on];
 
     if (whenVisible) {
+      const io = getIntersectionObserver(rootMargin);
       if (io && childRef.current.childElementCount) {
         // As root node does not have any box model, it cannot intersect.
         const el = childRef.current.children[0];
