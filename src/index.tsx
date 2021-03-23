@@ -5,47 +5,33 @@ import { isBrowser, isDev } from "./constants.macro";
 export type LazyProps = {
   ssrOnly?: boolean;
   whenIdle?: boolean;
-  whenVisible?: boolean;
-  noWrapper?: boolean;
+  whenVisible?: boolean | IntersectionObserverInit;
+  noWrapper?: boolean | keyof JSX.IntrinsicElements;
   didHydrate?: VoidFunction;
   promise?: Promise<any>;
   on?: (keyof HTMLElementEventMap)[] | keyof HTMLElementEventMap;
   children: React.ReactElement;
 };
 
-type Props = Omit<React.HTMLProps<HTMLDivElement>, "dangerouslySetInnerHTML"> &
+type Props = Omit<React.HTMLProps<HTMLElement>, "dangerouslySetInnerHTML"> &
   LazyProps;
 
 type VoidFunction = () => void;
-
-const event = "hydrate";
-
-const io =
-  isBrowser && typeof IntersectionObserver !== "undefined"
-    ? new IntersectionObserver(
-        entries => {
-          entries.forEach(entry => {
-            if (entry.isIntersecting || entry.intersectionRatio > 0) {
-              entry.target.dispatchEvent(new CustomEvent(event));
-            }
-          });
-        },
-        {
-          rootMargin: "250px"
-        }
-      )
-    : null;
 
 // React currently throws a warning when using useLayoutEffect on the server.
 const useIsomorphicLayoutEffect = isBrowser
   ? React.useLayoutEffect
   : React.useEffect;
 
+function reducer() {
+  return true;
+}
+
 function LazyHydrate(props: Props) {
-  const childRef = React.useRef<HTMLDivElement>(null);
+  const childRef = React.useRef<HTMLElement>(null);
 
   // Always render on server
-  const [hydrated, setHydrated] = React.useState(!isBrowser);
+  const [hydrated, hydrate] = React.useReducer(reducer, !isBrowser);
 
   const {
     noWrapper,
@@ -76,91 +62,118 @@ function LazyHydrate(props: Props) {
   useIsomorphicLayoutEffect(() => {
     // No SSR Content
     if (!childRef.current.hasChildNodes()) {
-      setHydrated(true);
+      hydrate();
     }
   }, []);
 
   React.useEffect(() => {
+    if (hydrated && didHydrate) {
+      didHydrate();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated]);
+
+  React.useEffect(() => {
     if (ssrOnly || hydrated) return;
-    const cleanupFns: VoidFunction[] = [];
-    function cleanup() {
-      while (cleanupFns.length) {
-        cleanupFns.pop()();
-      }
-    }
-    function hydrate() {
-      setHydrated(true);
-      if (didHydrate) didHydrate();
-    }
-
-    if (promise) {
-      promise.then(hydrate).catch(hydrate);
-    }
-
     if (whenIdle) {
       // @ts-ignore
       if (typeof requestIdleCallback !== "undefined") {
         // @ts-ignore
         const idleCallbackId = requestIdleCallback(hydrate, { timeout: 500 });
-        cleanupFns.push(() => {
+        return () => {
           // @ts-ignore
           cancelIdleCallback(idleCallbackId);
-        });
-      } else {
-        const id = setTimeout(hydrate, 2000);
-        cleanupFns.push(() => {
-          clearTimeout(id);
-        });
+        };
       }
+      const id = setTimeout(hydrate, 2000);
+      return () => {
+        clearTimeout(id);
+      };
     }
+  }, [hydrated, ssrOnly, whenIdle]);
 
-    let events = Array.isArray(on) ? on.slice() : [on];
+  React.useEffect(() => {
+    if (ssrOnly || hydrated) return;
 
     if (whenVisible) {
-      if (io && childRef.current.childElementCount) {
-        // As root node does not have any box model, it cannot intersect.
-        const el = childRef.current.children[0];
-        io.observe(el);
-        events.push(event as keyof HTMLElementEventMap);
+      const element = noWrapper
+        ? childRef.current
+        : // As root node does not have any box model, it cannot intersect.
+          childRef.current.firstElementChild;
 
-        cleanupFns.push(() => {
-          io.unobserve(el);
-        });
-      } else {
-        return hydrate();
+      if (element && typeof IntersectionObserver !== "undefined") {
+        const observerOptions =
+          typeof whenVisible === "object"
+            ? whenVisible
+            : {
+                rootMargin: "250px"
+              };
+
+        const io = new IntersectionObserver(entries => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting || entry.intersectionRatio > 0) {
+              hydrate();
+            }
+          });
+        }, observerOptions);
+
+        io.observe(element);
+
+        return () => {
+          io.disconnect();
+        };
       }
+      hydrate();
     }
+  }, [hydrated, ssrOnly, whenVisible, noWrapper]);
+
+  React.useEffect(() => {
+    if (ssrOnly || hydrated) return;
+    if (promise) {
+      promise.then(hydrate, hydrate);
+    }
+  }, [hydrated, ssrOnly, promise]);
+
+  React.useEffect(() => {
+    if (ssrOnly || hydrated) return;
+
+    const events = ([] as Array<keyof HTMLElementEventMap>).concat(on);
+
+    const element = childRef.current;
 
     events.forEach(event => {
-      childRef.current.addEventListener(event, hydrate, {
+      element.addEventListener(event, hydrate, {
         once: true,
-        capture: true,
         passive: true
-      });
-      cleanupFns.push(() => {
-        childRef.current.removeEventListener(event, hydrate, { capture: true });
       });
     });
 
-    return cleanup;
-  }, [hydrated, on, ssrOnly, whenIdle, whenVisible, didHydrate, promise]);
+    return () => {
+      events.forEach(event => {
+        element.removeEventListener(event, hydrate, {});
+      });
+    };
+  }, [hydrated, ssrOnly, on]);
+
+  const WrapperElement = ((typeof noWrapper === "string"
+    ? noWrapper
+    : "div") as unknown) as React.FC<React.HTMLProps<HTMLElement>>;
 
   if (hydrated) {
     if (noWrapper) {
       return children;
     }
     return (
-      <div ref={childRef} style={{ display: "contents" }} {...rest}>
+      <WrapperElement ref={childRef} style={{ display: "contents" }} {...rest}>
         {children}
-      </div>
+      </WrapperElement>
     );
   } else {
     return (
-      <div
-        ref={childRef}
-        style={{ display: "contents" }}
-        suppressHydrationWarning
+      <WrapperElement
         {...rest}
+        ref={childRef}
+        suppressHydrationWarning
         dangerouslySetInnerHTML={{ __html: "" }}
       />
     );
