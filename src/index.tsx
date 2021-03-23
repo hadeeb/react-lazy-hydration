@@ -10,6 +10,7 @@ export type LazyProps = {
   didHydrate?: VoidFunction;
   promise?: Promise<any>;
   on?: (keyof HTMLElementEventMap)[] | keyof HTMLElementEventMap;
+  children: React.ReactElement;
 };
 
 type Props = Omit<React.HTMLProps<HTMLDivElement>, "dangerouslySetInnerHTML"> &
