@@ -11,6 +11,7 @@ export type LazyProps = {
   promise?: Promise<any>;
   on?: (keyof HTMLElementEventMap)[] | keyof HTMLElementEventMap;
   children: React.ReactElement;
+  as: (keyof JSX.IntrinsicElements)[]
 };
 
 type Props = Omit<React.HTMLProps<HTMLElement>, "dangerouslySetInnerHTML"> &
@@ -42,6 +43,7 @@ function LazyHydrate(props: Props) {
     on = [],
     children,
     didHydrate, // callback for hydration
+    as = 'div',
     ...rest
   } = props;
 
@@ -157,12 +159,13 @@ function LazyHydrate(props: Props) {
     whenVisible,
     didHydrate,
     promise,
-    noWrapper
+    noWrapper,
+    as
   ]);
 
   const WrapperElement = ((typeof noWrapper === "string"
     ? noWrapper
-    : "div") as unknown) as React.FC<React.HTMLProps<HTMLElement>>;
+    : as) as unknown) as React.FC<React.HTMLProps<HTMLElement>>;
 
   if (hydrated) {
     if (noWrapper) {
