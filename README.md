@@ -27,6 +27,10 @@ function App() {
       <LazyHydrate ssrOnly>
         {...}
       </LazyHydrate>
+      {/* Use Custom Wrapper Tag  */}
+      <LazyHydrate tag={"span"}>
+        {...}
+      </LazyHydrate>
       {/* Requires IntersectionObserver. Polyfill not included. */}
       <LazyHydrate whenVisible>
         {...}
