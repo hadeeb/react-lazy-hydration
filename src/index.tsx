@@ -159,8 +159,7 @@ function LazyHydrate(props: Props) {
     whenVisible,
     didHydrate,
     promise,
-    noWrapper,
-    as
+    noWrapper
   ]);
 
   const WrapperElement = ((typeof noWrapper === "string"
