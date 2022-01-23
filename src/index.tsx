@@ -11,7 +11,7 @@ export type LazyProps = {
   promise?: Promise<any>;
   on?: (keyof HTMLElementEventMap)[] | keyof HTMLElementEventMap;
   children: React.ReactElement;
-  as: (keyof JSX.IntrinsicElements)[]
+  as?: keyof JSX.IntrinsicElements;
 };
 
 type Props = Omit<React.HTMLProps<HTMLElement>, "dangerouslySetInnerHTML"> &
