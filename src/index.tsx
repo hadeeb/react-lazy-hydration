@@ -27,6 +27,21 @@ function reducer() {
   return true;
 }
 
+// find a visible node to observe
+// NOTE: this just checks the first child at each level
+function getFirstVisibleChild(el) {
+  const child = el.firstElementChild;
+  if (child) {
+    const style = getComputedStyle(child);
+    // element might contain visible children
+    if (!["contents"].includes(style.display)) {
+      return child;
+    }
+
+    return getFirstVisibleChild(child);
+  }
+  return child;
+}
 function LazyHydrate(props: Props) {
   const childRef = React.useRef<HTMLElement>(null);
 
@@ -92,7 +107,7 @@ function LazyHydrate(props: Props) {
       const element = noWrapper
         ? rootElement
         : // As root node does not have any box model, it cannot intersect.
-          rootElement.firstElementChild;
+          getFirstVisibleChild(rootElement);
 
       if (element && typeof IntersectionObserver !== "undefined") {
         const observerOptions =
