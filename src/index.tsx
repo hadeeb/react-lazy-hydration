@@ -61,7 +61,7 @@ function LazyHydrate(props: Props) {
 
   useIsomorphicLayoutEffect(() => {
     // No SSR Content
-    if (!childRef.current.hasChildNodes()) {
+    if (!childRef.current?.hasChildNodes()) {
       hydrate();
     }
   }, []);
