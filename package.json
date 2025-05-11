@@ -42,7 +42,7 @@
     "lint": "eslint src/** --fix"
   },
   "dependencies": {
-    "@babel/runtime": "^7.9.2"
+    "@babel/runtime": "^7.26.10"
   },
   "peerDependencies": {
     "react": ">=16.8.0"
